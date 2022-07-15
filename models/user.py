@@ -23,25 +23,12 @@ class PyObjectId(ObjectId):
 
 
 class UserBase(BaseModel):
-    user_id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str = Field(
         ...,
         min_length=5,
         max_length=20,
     )
     email: str = EmailStr(...)
-
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "id": "5e8f8f8f8f8f8f8f8f8f8f8f",
-                "username": "new_user",
-                "email": "new_email@example.com"
-            }
-        }
 
 
 class UserSingUp(UserBase):
@@ -62,6 +49,16 @@ class UserSingUp(UserBase):
 
 
 class UserLogin(BaseModel):
+    username: str = Field(
+        ...,
+        min_length=5,
+        max_length=20,
+    )
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=20
+    )
 
     class Config:
         schema_extra = {
@@ -110,4 +107,16 @@ class UserUpdatePassword(BaseModel):
 
 
 class UserOut(UserBase):
-    pass
+    user_id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "id": "5e8f8f8f8f8f8f8f8f8f8f8f",
+                "username": "new_user",
+                "email": "new_email@example.com"
+            }
+        }

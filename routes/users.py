@@ -15,7 +15,6 @@ from fastapi import(
     APIRouter, Body, HTTPException,
     status, Path
 )
-from fastapi.encoders import jsonable_encoder
 
 users = APIRouter()
 
@@ -31,12 +30,13 @@ pass_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 )
 async def user_signup(user: UserSingUp = Body(...)):
     user.password = pass_context.hash(user.password)
-    user = jsonable_encoder(user)
-    if created_user := await insert_user(user) is None:
+    created_user = await insert_user(user.dict())
+    if created_user is None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User already exists"
         )
+    created_user.pop("password")
     return created_user
 
 
@@ -48,7 +48,8 @@ async def user_signup(user: UserSingUp = Body(...)):
     tags=["users"]
 )
 async def user_login(user: UserLogin = Body(...)):
-    if user_data := await find_user(user.username) is None:
+    user_data = await find_user(user.username)
+    if user_data is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
@@ -73,7 +74,6 @@ async def user_login(user: UserLogin = Body(...)):
 async def user_basic_info_update(user: UserUpdateBasicInfo = Body(...), user_id: str = Path(...)):
     user = {key: value for key, value in user.dict().items()
             if value is not None}
-    user = jsonable_encoder(user)
     user_updated = await update_user(user, user_id)
     return user_updated
 
