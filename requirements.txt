@@ -1,0 +1,7 @@
+fastapi
+pydantic[email]
+uvicorn[standart]
+motor
+python-decouple
+passlib[bcrypt]
+python-multipart
