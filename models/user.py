@@ -71,11 +71,12 @@ class UserLogin(BaseModel):
 
 class UserUpdateBasicInfo(BaseModel):
     username: Optional[str] = Field(
+        None,
         min_length=5,
         max_length=20,
     )
 
-    email: Optional[str] = EmailStr()
+    email: Optional[str] = EmailStr(None)
 
     class Config:
         schema_extra = {

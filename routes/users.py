@@ -1,32 +1,47 @@
 # Models
-from models.user import(
+from models.user import (
     UserSingUp, UserOut, UserLogin,
     UserUpdateBasicInfo, UserUpdatePassword
 )
+from models.task import TaskOut
 # Queries
-from db.users_queries import(
+from db.users_queries import (
     insert_user, find_user, update_user,
     delete_user
 )
+from db.tasks_queries import get_tasks
 # Authentication
 from passlib.context import CryptContext
 # FastApi
-from fastapi import(
+from fastapi import (
     APIRouter, Body, HTTPException,
     status, Path
 )
+from typing import List
 
-users = APIRouter()
+router = APIRouter(
+    prefix="/users",
+    tags=["users"],
+)
 
 pass_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-@users.post(
-    path="/users",
+@router.get(
+    path="/{user_id}/tasks",
+    summary="Get all tasks of the user",
+    response_model=List[TaskOut]
+)
+async def get_user_tasks(user_id: str = Path(...)):
+    tasks = await get_tasks(user_id)
+    return tasks
+
+
+@ router.post(
+    path="/signup",
     summary="Register a new user",
     response_model=UserOut,
     status_code=status.HTTP_201_CREATED,
-    tags=["users"]
 )
 async def user_signup(user: UserSingUp = Body(...)):
     user.password = pass_context.hash(user.password)
@@ -40,12 +55,11 @@ async def user_signup(user: UserSingUp = Body(...)):
     return created_user
 
 
-@users.post(
-    path="/users/login",
+@ router.post(
+    path="/login",
     summary="Login a user",
     response_model=UserOut,
     status_code=status.HTTP_200_OK,
-    tags=["users"]
 )
 async def user_login(user: UserLogin = Body(...)):
     user_data = await find_user(user.username)
@@ -64,26 +78,22 @@ async def user_login(user: UserLogin = Body(...)):
         return user_data
 
 
-@users.put(
-    path="/users/{user_id}/updateBasicInfo",
+@ router.put(
+    path="/{user_id}/updateBasicInfo",
     summary="Update basic info of the user",
     response_model=UserOut,
     status_code=status.HTTP_200_OK,
-    tags=["users"]
 )
 async def user_basic_info_update(user: UserUpdateBasicInfo = Body(...), user_id: str = Path(...)):
-    user = {key: value for key, value in user.dict().items()
-            if value is not None}
-    user_updated = await update_user(user, user_id)
+    user_updated = await update_user(user.dict(exclude_none=True), user_id)
     return user_updated
 
 
-@users.put(
-    path="/users/{user_id}/updatePassword",
+@ router.put(
+    path="/{user_id}/updatePassword",
     summary="Update the password of the user",
     response_model=UserOut,
     status_code=status.HTTP_200_OK,
-    tags=["users"]
 )
 async def password_update(usar_pass: UserUpdatePassword = Body(...), user_id: str = Path(...)):
     user = await find_user(user_id)
@@ -97,12 +107,11 @@ async def password_update(usar_pass: UserUpdatePassword = Body(...), user_id: st
     return user_updated
 
 
-@users.delete(
-    path="/users/{user_id}/delete",
+@ router.delete(
+    path="/{user_id}/delete",
     summary="Delete a user",
     response_model=UserOut,
     status_code=status.HTTP_200_OK,
-    tags=["users"]
 )
 async def user_delete(user_id: str = Path(...)):
     user_deleted = await delete_user(user_id)

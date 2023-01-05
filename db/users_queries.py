@@ -1,5 +1,6 @@
 from config.db_connection import db
 from pymongo.errors import DuplicateKeyError
+from bson import ObjectId
 
 
 async def insert_user(user: dict):
@@ -17,10 +18,11 @@ async def find_user(username):
 
 
 async def update_user(user_data, user_id):
-    await db.users.update_one({"_id": user_id}, {"$set": user_data})
-    return await db.users.find_one({"_id": user_id})
+    await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": user_data})
+    return await db.users.find_one({"_id": ObjectId(user_id)})
 
 
 async def delete_user(user_id):
-    await db.users.delete_one({"_id": user_id})
-    return await db.users.find_one({"_id": user_id})
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    await db.users.delete_one({"_id": ObjectId(user_id)})
+    return user
